@@ -1,130 +1,61 @@
 package com.mis.mathtome;
 
+import androidx.activity.result.ActivityResultCallback;
+import androidx.activity.result.ActivityResultLauncher;
 import androidx.appcompat.app.AppCompatActivity;
 
-import tk.pratanumandal.expr4j.ExpressionEvaluator;
-
-import android.app.AlertDialog;
-import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
-import android.os.CountDownTimer;
-import android.view.View;
-import android.widget.Button;
-import android.widget.TextView;
+import android.widget.Toast;
 
-import java.util.Locale;
+import com.firebase.ui.auth.AuthUI;
+import com.firebase.ui.auth.FirebaseAuthUIActivityResultContract;
+import com.firebase.ui.auth.data.model.FirebaseAuthUIAuthenticationResult;
+import com.google.firebase.FirebaseApp;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 
+import java.util.Collections;
+import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
-    final Context self = this;
-    final int MAX_COUNTER = 30;
-    private TextView textViewGenerated;
-    private TextView textViewInput;
-    private TextView textViewCounter;
-    private String expression = "";
-    private int tries = 0;
-    private int score = 0;
-    private double generatedNumber;
+    List<AuthUI.IdpConfig> providers = Collections.singletonList(new AuthUI.IdpConfig.EmailBuilder().build());
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
-        textViewGenerated = findViewById(R.id.textViewGenerated);
-        textViewInput = findViewById(R.id.textViewInput);
-        textViewCounter = findViewById(R.id.textViewCounter);
-
-        textViewInput.setText(expression);
-        countDownTimer.start();
-        this.setRandomNumber();
     }
 
-    public void onNumberSelected(View view) {
-        Button buttonNumber = (Button) view;
-        expression += buttonNumber.getText().toString();
-        textViewInput.setText(expression);
+    @Override
+    protected void onStart() {
+        FirebaseApp.initializeApp(MainActivity.this);
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        if (user == null) {
+            Intent signInIntent = AuthUI.getInstance()
+                    .createSignInIntentBuilder()
+                    .setAvailableProviders(providers)
+                    .build();
+            signInLauncher.launch(signInIntent);
+        } else {
+            Toast.makeText(this, user.getDisplayName(), Toast.LENGTH_SHORT).show();
+            Intent homeIntent = new Intent(this, HomeActivity.class);
+            startActivity(homeIntent);
+        }
+        super.onStart();
     }
 
-    public void onRemoveNumber(View view) {
-        expression = !expression.isEmpty() ? expression.substring(0, expression.length() - 1) : "";
-        textViewInput.setText(expression);
-    }
-
-    public void onClearExpression(View view) {
-        expression = "";
-        textViewInput.setText(expression);
-    }
-
-    public void onTotalSelected(View view) {
-        if (expression.isEmpty() || expression.equals(Double.toString(generatedNumber))) return;
-
-        textViewGenerated = findViewById(R.id.textViewGenerated);
-        ExpressionEvaluator exprEval = new ExpressionEvaluator();
-        double result;
-
-        try {
-            result = exprEval.evaluate(this.getExpression());
-            if (result == generatedNumber) {
-                score += 1;
+    private final ActivityResultLauncher<Intent> signInLauncher = registerForActivityResult(
+            new FirebaseAuthUIActivityResultContract(),
+            new ActivityResultCallback<FirebaseAuthUIAuthenticationResult>() {
+                @Override
+                public void onActivityResult(FirebaseAuthUIAuthenticationResult result) {
+                    onSignInResult(result);
+                }
             }
-        } catch (Exception e) {
-            showMessage("Esta operación es inválida, por favor revisa!");
-        }
+    );
 
-        this.setRandomNumber();
-        expression = "";
-        textViewInput.setText(expression);
-        tries++;
+    private void onSignInResult(FirebaseAuthUIAuthenticationResult result) {
+        String test = "";
     }
-
-    private double getRandomNumber() {
-        return Math.ceil(Math.random() * 100 + 1);
-    }
-
-    private String getExpression() {
-        return expression.replaceAll("×", "*")
-                .replaceAll("÷", "/");
-    }
-
-    private void setRandomNumber() {
-        generatedNumber = this.getRandomNumber();
-        textViewGenerated.setText(String.format(Locale.getDefault(), "%.0f", generatedNumber));
-    }
-
-    private void reset() {
-        expression = "";
-        textViewInput.setText(expression);
-        tries = 0;
-        score = 0;
-        countDownTimer.start();
-    }
-
-    private void showMessage(String message) {
-        new AlertDialog.Builder(self)
-                .setTitle("¡Aviso!")
-                .setMessage(message)
-                .setPositiveButton(android.R.string.ok, (dialogInterface, i) -> {
-                    reset();
-                })
-                .show();
-    }
-
-    CountDownTimer countDownTimer = new CountDownTimer(MAX_COUNTER * 1000, 1000) {
-        @Override
-        public void onTick(long milliseconds) {
-            textViewCounter.setText(String.format(Locale.getDefault(), "%d", milliseconds / 1000));
-        }
-
-        @Override
-        public void onFinish() {
-            new AlertDialog.Builder(self)
-                    .setTitle("Puntuación")
-                    .setMessage(String.format("Has conseguido %s / %s. Intenta otra vez!", score, tries))
-                    .setPositiveButton(android.R.string.ok, (dialogInterface, i) -> {
-                        reset();
-                    })
-                    .show();
-        }
-    };
 }

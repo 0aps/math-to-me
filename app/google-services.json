@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "641404624932",
+    "project_id": "mathtome-7af32",
+    "storage_bucket": "mathtome-7af32.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:641404624932:android:d0ab0a4dc6db99270d78b1",
+        "android_client_info": {
+          "package_name": "com.mis.mathtome"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "641404624932-cgmv0k1l2rogk6mfmiuvjupph43tutor.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDM9pGZ-v9c0SbrDnbSfmxb0QCF3m1ZOBI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "641404624932-cgmv0k1l2rogk6mfmiuvjupph43tutor.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
