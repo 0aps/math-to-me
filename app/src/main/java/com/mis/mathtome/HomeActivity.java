@@ -18,13 +18,16 @@ import com.firebase.ui.auth.AuthUI;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 
+import java.util.ArrayList;
 import java.util.Locale;
+import java.util.Random;
 
 import tk.pratanumandal.expr4j.ExpressionEvaluator;
 
 public class HomeActivity extends AppCompatActivity {
     final Context self = this;
     final int MAX_COUNTER = 30;
+    final private ArrayList<String> history = new ArrayList<>();
     private TextView textViewGenerated;
     private TextView textViewInput;
     private TextView textViewCounter;
@@ -89,7 +92,8 @@ public class HomeActivity extends AppCompatActivity {
     }
 
     public void onTotalSelected(View view) {
-        if (expression.isEmpty() || expression.equals(Double.toString(generatedNumber))) return;
+        final String generatedExpression = textViewGenerated.getText().toString();
+        if (expression.isEmpty() || expression.equals(generatedExpression)) return;
 
         textViewGenerated = findViewById(R.id.textViewGenerated);
         ExpressionEvaluator exprEval = new ExpressionEvaluator();
@@ -100,6 +104,7 @@ public class HomeActivity extends AppCompatActivity {
             if (result == generatedNumber) {
                 score += 1;
             }
+            history.add(String.format(Locale.getDefault(), "%s\t\t\t%s", generatedExpression, expression));
         } catch (Exception e) {
             showMessage("Esta operación es inválida, por favor revisa!");
         }
@@ -110,8 +115,13 @@ public class HomeActivity extends AppCompatActivity {
         tries++;
     }
 
-    private double getRandomNumber() {
-        return Math.ceil(Math.random() * 100 + 1);
+    private int getRandomNumber(int until) {
+        return new Random().nextInt(until);
+    }
+
+    private String getRandomOperation() {
+        String[] operations = {"+", "-", "*"};
+        return operations[this.getRandomNumber(operations.length)];
     }
 
     private String getExpression() {
@@ -120,8 +130,17 @@ public class HomeActivity extends AppCompatActivity {
     }
 
     private void setRandomNumber() {
-        generatedNumber = this.getRandomNumber();
-        textViewGenerated.setText(String.format(Locale.getDefault(), "%.0f", generatedNumber));
+        ExpressionEvaluator exprEval = new ExpressionEvaluator();
+        final int maxNumber = 30;
+        int firstNumber = this.getRandomNumber(maxNumber);
+        int secondNumber = this.getRandomNumber(maxNumber);
+        int thirdNumber = this.getRandomNumber(maxNumber);
+        String firstOperation = this.getRandomOperation();
+        String secondOperation = this.getRandomOperation();
+        String operation = String.format(Locale.getDefault(), "%d%s%d%s%d",
+                firstNumber, firstOperation, secondNumber, secondOperation, thirdNumber);
+        generatedNumber =  exprEval.evaluate(operation);
+        textViewGenerated.setText(operation.replaceAll("\\*", "×"));
     }
 
     private void reset() {
@@ -129,6 +148,7 @@ public class HomeActivity extends AppCompatActivity {
         textViewInput.setText(expression);
         tries = 0;
         score = 0;
+        this.setRandomNumber();
         countDownTimer.start();
     }
 
@@ -150,9 +170,10 @@ public class HomeActivity extends AppCompatActivity {
 
         @Override
         public void onFinish() {
+            final String historyMessage =  String.join("\n", history);
             new AlertDialog.Builder(self)
                     .setTitle("Puntuación")
-                    .setMessage(String.format("Has conseguido %s / %s. Intenta otra vez!", score, tries))
+                    .setMessage(String.format("Has conseguido %s / %s. \n\n%s\n\n Intenta otra vez!", score, tries, historyMessage))
                     .setPositiveButton(android.R.string.ok, (dialogInterface, i) -> {
                         reset();
                     })
